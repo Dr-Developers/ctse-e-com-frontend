@@ -4,14 +4,15 @@ import arrowImage from "../../Assets/arrow.svg";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addProduct } from "../../actions/productActions";
-import { storage } from "../../firebase";
-import { ref, uploadBytes, listAll, getDownloadURL } from "firebase/storage";
+import { baseURL } from "../../constance/productConstance";
+import axios from "axios";
+
 const AddProduct = () => {
   const [sku, setSKU] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-  const [imageUpload, setImageUpload] = useState(null);
+  const [imageURL, setImageURL] = useState('');
   const [quantity, setQuantity] = useState("");
 
   const dispatch = useDispatch();
@@ -20,33 +21,96 @@ const AddProduct = () => {
   const { loading, error, productAdd } = productRegister;
   const navigate = useNavigate();
 
-  const imageListRef = ref(storage, "images/");
-
   useEffect(() => {
     if (productAdd) {
       navigate("/");
     }
   });
 
-  const handleSubmit = async (e) => {
-    const image = [];
-    e.preventDefault();
-    listAll(imageListRef).then((res) => {
-      res.items.forEach((itemRef) => {
-        getDownloadURL(itemRef).then((url) => {
-          image.push(url);
-        });
-      });
-    });
-    dispatch(addProduct(name, price, description, image, sku, quantity));
-    if (!imageUpload) {
-      return;
+  // const handleImage = async (e) => {
+	// 	e.preventDefault();
+	// 	try {
+	// 		const file = e.target.files[0];
+	// 		if (!file) return alert("File not exist.");
+	// 		if (file.size > 1024 * 1024)
+	// 			// 1mb
+	// 			return alert("Size too large!");
+	// 		if (file.type !== "image/jpeg" && file.type !== "image/png")
+	// 			// 1mb
+	// 			return alert("File format is incorrect.");
+	// 		let formData = new FormData();
+	// 		formData.append("file", file);
+
+  //     console.log("formData: ",formData);
+
+	// 		const res = await axios.post(
+	// 			`${baseURL}/upload`,
+	// 			formData,
+	// 			{
+	// 				headers: {
+	// 					"content-type": "multipart/form-data",
+	// 				},
+	// 			},
+	// 		);
+	// 		setImage(res.data.url);
+	// 		setImageURL(res.data.url);
+
+  //     console.log("URL: ", res.data.url);
+	// 	} catch (error) {
+	// 		console.log(error);
+	// 	}
+	// };
+
+  const handleImage = async (e) => {
+    if (!e.target.files) {
+        console.error("No files input found.");
+        return;
     }
-    const imageRef = ref(storage, `images/${imageUpload.name + Date.now()}`);
-    uploadBytes(imageRef, imageUpload).then((snapshot) => {
-      alert("image Uploaded");
-      console.log("Uploaded a blob or file!");
-    });
+
+    e.preventDefault();
+
+    try {
+        const file = e.target.files[0];
+        if (!file) {
+            alert("No file selected.");
+            return;
+        }
+
+        if (file.size > 1024 * 1024) { // 1 MB
+            alert("File size too large! Limit is 1MB.");
+            return;
+        }
+
+        if (file.type !== "image/jpeg" && file.type !== "image/png") {
+            alert("Invalid file format! Only JPEG and PNG are allowed.");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("file", file);
+
+        console.log("formData: ", formData);
+
+        const response = await axios.post(`${baseURL}/upload`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        setImageURL(response.data.url);  // Assuming setImageURL is a valid function like setImage
+
+        console.log("URL: ", response.data.url);
+    } catch (error) {
+        console.error("Error uploading image: ", error);
+    }
+};
+
+
+  const handleSubmit = async (e) => {
+    let image = []; 
+    e.preventDefault();
+    image.push(imageURL);
+    dispatch(addProduct(name, price, description, image, sku, quantity));
   };
 
   return (
@@ -134,7 +198,7 @@ const AddProduct = () => {
                 type="file"
                 className="bg-offWhite w-96 rounded-md ml-10 focus:outline-none pl-2 p-1"
                 name="Image"
-                onChange={(e) => setImageUpload(e.target.files[0])}
+                onChange={handleImage}
               />
             </div>
           </div>

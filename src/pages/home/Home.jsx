@@ -44,9 +44,9 @@ const Home = () => {
       dispatch(deleteProduct(id));
       if (success) {
         console.log("ok");
-        navigation("/");
-        window.location.reload();
+        navigation("/");        
       }
+      window.location.reload();
     }
   };
 
@@ -172,7 +172,7 @@ const Home = () => {
                     {product.sku}
                   </th>
                   <td class="py-4 px-6">
-                    <img src={img1} alt="image1" className="w-20" />
+                    <img src={product.image} alt="image1" className="w-20" />
                   </td>
                   <td class="py-4 px-6">{product.name}</td>
                   <td class="py-4 px-6">{product.price}</td>

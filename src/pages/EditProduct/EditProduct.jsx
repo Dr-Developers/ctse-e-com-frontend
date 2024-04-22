@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import arrowImage from "../../Assets/arrow.svg";
 import Header from "../../components/header/Header";
 import { updateProduct } from "../../actions/productActions";
-import { storage } from "../../firebase";
-import { ref, uploadBytes, } from "firebase/storage";
+import { baseURL } from "../../constance/productConstance";
+import axios from "axios";
 
 const EditProduct = () => {
   let navigate = useNavigate();
@@ -18,6 +18,7 @@ const EditProduct = () => {
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(["test"]);
   const [quantity, setQuantity] = useState("");
+  const [imageURL, setImageURL] = useState('');
 
   const dispatch = useDispatch();
 
@@ -33,17 +34,54 @@ const EditProduct = () => {
     getData();
   }, [location.state]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(updateProduct(id, name, price, description, image, sku, quantity));
-    if (!image) {
-      return;
+  const handleImage = async (e) => {
+    if (!e.target.files) {
+        console.error("No files input found.");
+        return;
     }
-    const imageRef = ref(storage, `images/${image.name + Date.now()}`);
-    uploadBytes(imageRef, image).then((snapshot) => {
-      alert("image Uploaded");
-      console.log("Uploaded a blob or file!");
-    });
+
+    e.preventDefault();
+
+    try {
+        const file = e.target.files[0];
+        if (!file) {
+            alert("No file selected.");
+            return;
+        }
+
+        if (file.size > 1024 * 1024) { // 1 MB
+            alert("File size too large! Limit is 1MB.");
+            return;
+        }
+
+        if (file.type !== "image/jpeg" && file.type !== "image/png") {
+            alert("Invalid file format! Only JPEG and PNG are allowed.");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("file", file);
+
+        console.log("formData: ", formData);
+
+        const response = await axios.post(`${baseURL}/upload`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        setImageURL(response.data.url);  // Assuming setImageURL is a valid function like setImage
+
+        console.log("URL: ", response.data.url);
+    } catch (error) {
+        console.error("Error uploading image: ", error);
+    }
+};
+
+  const handleSubmit = (e) => {
+    let image = []; 
+    e.preventDefault();
+    image.push(imageURL);
+    dispatch(updateProduct(id, name, price, description, image, sku, quantity));
     navigate("/");
   };
 
@@ -122,7 +160,7 @@ const EditProduct = () => {
               <input
                 type="file"
                 name="Image"
-                onChange={(e) => setImage(e.target.files[0])}
+                onChange={handleImage}
                 className="bg-offWhite w-96 rounded-md ml-10 focus:outline-none pl-2 p-1"
               />
             </div>
