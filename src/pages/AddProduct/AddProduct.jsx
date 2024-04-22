@@ -27,40 +27,6 @@ const AddProduct = () => {
     }
   });
 
-  // const handleImage = async (e) => {
-	// 	e.preventDefault();
-	// 	try {
-	// 		const file = e.target.files[0];
-	// 		if (!file) return alert("File not exist.");
-	// 		if (file.size > 1024 * 1024)
-	// 			// 1mb
-	// 			return alert("Size too large!");
-	// 		if (file.type !== "image/jpeg" && file.type !== "image/png")
-	// 			// 1mb
-	// 			return alert("File format is incorrect.");
-	// 		let formData = new FormData();
-	// 		formData.append("file", file);
-
-  //     console.log("formData: ",formData);
-
-	// 		const res = await axios.post(
-	// 			`${baseURL}/upload`,
-	// 			formData,
-	// 			{
-	// 				headers: {
-	// 					"content-type": "multipart/form-data",
-	// 				},
-	// 			},
-	// 		);
-	// 		setImage(res.data.url);
-	// 		setImageURL(res.data.url);
-
-  //     console.log("URL: ", res.data.url);
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	}
-	// };
-
   const handleImage = async (e) => {
     if (!e.target.files) {
         console.error("No files input found.");
